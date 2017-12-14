@@ -221,7 +221,7 @@ if __name__ == '__main__':
     def train(args, epoch, start_iteration, data_loader, model, optimizer, loss, logger, is_validate=False, offset=0):
         statistics = []
         total_loss = 0
-        gpu_mem = tools.gpumemusage()
+        gpu_mem = ""  # tools.gpumemusage()
 
         if is_validate:
             model.eval()
@@ -230,7 +230,7 @@ if __name__ == '__main__':
             progress = tqdm(tools.IteratorTimer(data_loader), ncols=100, total=np.minimum(len(data_loader), args.validation_n_batches), leave=True, position=offset, desc=title)
         else:
             model.train()
-            title = 'Training {} Epoch {}'.format(tools.gpumemusage(), epoch)
+            title = 'Training {} Epoch {}'.format(gpu_mem, epoch)
             args.train_n_batches = np.inf if args.train_n_batches < 0 else args.train_n_batches
             progress = tqdm(tools.IteratorTimer(data_loader), ncols=120, total=np.minimum(len(data_loader), args.train_n_batches), smoothing=.9, miniters=1, leave=True, position=offset, desc=title)
 
@@ -356,7 +356,7 @@ if __name__ == '__main__':
                 for i in range(args.inference_batch_size):
                     flow_utils.writeFlow( join(flow_folder, '%06d.flo'%(batch_idx * args.inference_batch_size + i)),  _pflow[i])
 
-            progress.set_description('Inference {} Averages for Epoch {}: '.format(tools.gpumemusage(), epoch) + tools.format_dictionary_of_losses(loss_labels, np.array(statistics).mean(axis=0)))
+            progress.set_description('Inference {} Averages for Epoch {}: '.format(gpu_mem, epoch) + tools.format_dictionary_of_losses(loss_labels, np.array(statistics).mean(axis=0)))
             progress.update(1)
 
             if batch_idx == (args.inference_n_batches - 1):

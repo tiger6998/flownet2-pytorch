@@ -246,9 +246,11 @@ class FlowNet2S(FlowNetS.FlowNetS):
         super(FlowNet2S,self).__init__(args, batchNorm=batchNorm)
         self.rgb_max = args.rgb_max
 
-    def forward(self, x, ntk_num='1'):
+    def forward(self, inputs, ntk_num='1'):
         rgb_mean = inputs.contiguous().view(inputs.size()[:2]+(-1,)).mean(dim=-1).view(inputs.size()[:2] + (1,1,1,))
         x = (inputs - rgb_mean) / self.rgb_max
+        N, _, _, H, W = inputs.size()
+        x = x.view(N, -1, H, W).contiguous() 
         out_conv1 = self.conv1(x)
 
         out_conv2 = self.conv2(out_conv1)
@@ -282,7 +284,7 @@ class FlowNet2S(FlowNetS.FlowNetS):
         if self.training:
             return flow2,flow3,flow4,flow5,flow6
         else:
-            return flow2
+            return self.upsample1(flow2)
 
 class FlowNet2SD(FlowNetSD.FlowNetSD):
     def __init__(self, args, batchNorm=False):
