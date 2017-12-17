@@ -129,11 +129,18 @@ def gpumemusage():
 
 
 def update_hyperparameter_schedule(args, epoch, global_iteration, optimizer):
-    if args.schedule_lr_frequency > 0:
+    # if args.schedule_lr_frequency > 0:
+    #     for param_group in optimizer.param_groups:
+    #         if (global_iteration + 1) % args.schedule_lr_frequency == 0:
+    #             param_group['lr'] /= float(args.schedule_lr_fraction)
+    #             param_group['lr'] = float(np.maximum(param_group['lr'], 0.000001))
+    if global_iteration == 300000:
         for param_group in optimizer.param_groups:
-            if (global_iteration + 1) % args.schedule_lr_frequency == 0:
-                param_group['lr'] /= float(args.schedule_lr_fraction)
-                param_group['lr'] = float(np.maximum(param_group['lr'], 0.000001))
+            param_group['lr'] /= 2.0
+    elif global_iteration > 300000 and global_iteration % 100000 == 0:
+        for param_group in optimizer.param_groups:
+            param_group['lr'] /= 2.0
+
 
 def save_checkpoint(state, is_best, path, prefix, filename='checkpoint.pth.tar'):
     prefix_save = os.path.join(path, prefix)

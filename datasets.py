@@ -11,14 +11,23 @@ import utils.frame_utils as frame_utils
 from scipy.misc import imread, imresize
 
 class StaticRandomCrop(object):
-    def __init__(self, size):
-        self.th, self.tw = size
+    def __init__(self, crop_size, img_shape):
+        self.th, self.tw = crop_size
+        h, w, _ = img_shape
+        self.h1 = random.randint(0, h - self.th)
+        self.w1 = random.randint(0, w - self.tw)
     def __call__(self, img):
-        h, w, _ = img.shape
-        h1 = random.randint(0, h - self.th)
-        w1 = random.randint(0, w - self.tw)
-        return img[h1:(h1+self.th), w1:(w1+self.tw),:]
+        return img[self.h1:(self.h1+self.th), self.w1:(self.w1+self.tw),:]
 
+class StaticRandomFilp(object):
+    def __init__(self):
+        self.flag = random.random() > 0.5
+    def __call__(self, img):
+        if self.flag:
+            return img[:, ::-1, :]
+        else:
+            return img
+        
 class StaticCenterCrop(object):
     def __init__(self, size):
         self.th, self.tw = size
@@ -111,9 +120,10 @@ class MpiSintelFinal(MpiSintel):
         super(MpiSintelFinal, self).__init__(args, is_cropped = is_cropped, root = root, dstype = 'final', replicates = replicates)
 
 class FlyingChairs(data.Dataset):
-  def __init__(self, args, is_cropped, root = '/path/to/FlyingChairs_release/data', replicates = 1):
+  def __init__(self, args, is_cropped, root = '/path/to/FlyingChairs_release/data', replicates = 1, is_fliped = False):
     self.args = args
     self.is_cropped = is_cropped
+    self.is_fliped = is_fliped
     self.crop_size = args.crop_size
     self.render_size = args.inference_size
     self.replicates = replicates
@@ -152,9 +162,12 @@ class FlyingChairs(data.Dataset):
 
     images = [img1, img2]
     if self.is_cropped:
-        cropper = StaticRandomCrop(self.crop_size)
+        cropper = StaticRandomCrop(self.crop_size, img1.shape)
+        flipper = StaticRandomFilp()
         images = map(cropper, images)
+        images = map(flipper, images)
         flow = cropper(flow)
+        flow = flipper(flow)
     else:
         cropper = StaticCenterCrop(self.render_size)
         images = map(cropper, images)
@@ -288,9 +301,12 @@ class ChairsSDHom(data.Dataset):
     flow = flow[::-1,:,:]
     images = [img1, img2]
     if self.is_cropped:
-        cropper = StaticRandomCrop(self.crop_size)
+        cropper = StaticRandomCrop(self.crop_size, img1.shape)
+        fliper = StaticRandomFilp()
         images = map(cropper, images)
+        images = map(fliper, images)
         flow = cropper(flow)
+        flow = fliper(flow)
     else:
         cropper = StaticCenterCrop(self.render_size)
         images = map(cropper, images)

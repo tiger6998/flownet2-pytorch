@@ -284,7 +284,7 @@ if __name__ == '__main__':
 
             # Print out statistics
             statistics.append(loss_values)
-            title = '{} {} Epoch {}'.format('Validating' if is_validate else 'Training', tools.gpumemusage(), epoch)
+            title = '{} {} Epoch {}'.format('Validating' if is_validate else 'Training', "", epoch)
 
             progress.set_description(title + ' ' + tools.format_dictionary_of_losses(loss_labels, statistics[-1]))
 
@@ -325,7 +325,7 @@ if __name__ == '__main__':
             if not os.path.exists(flow_folder):
                 os.makedirs(flow_folder)
 
-        gpu_mem = tools.gpumemusage()
+        gpu_mem = ""  # tools.gpumemusage()
         args.inference_n_batches = np.inf if args.inference_n_batches < 0 else args.inference_n_batches
 
         progress = tqdm(data_loader, ncols=100, total=np.minimum(len(data_loader), args.inference_n_batches), desc='Inferencing %s'%(gpu_mem), 
